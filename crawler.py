@@ -11,7 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 # import pandas as pd
 # import time
 
-START = 154
+START = 157
 END = 1000
 # service = r"C:\Users\Admin\Documents\code\crawler\geckodriver-v0.32.0-win32\geckodriver.exe"
 service = r'C:\Users\Admin\Documents\code\crawler\chromedriver_win32\chromedriver.exe'
@@ -125,6 +125,7 @@ def setter(house, label, data):
 chrome_options = webdriver.ChromeOptions()
 prefs = {"profile.managed_default_content_settings.images": 2}
 chrome_options.add_experimental_option("prefs", prefs)
+chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
 
 for location,url_cho_tot in locations.items():
     print(url_cho_tot)
@@ -132,8 +133,7 @@ for location,url_cho_tot in locations.items():
     if not os.path.exists(path):
         os.mkdir(path)
 
-    for page in tqdm(range(START, END + 1)):
-        # df = pd.DataFrame()
+    for page in tqdm(range(START, END + 1),position=0):
         # driver = webdriver.Firefox(executable_path=service,options=options)
         driver = webdriver.Chrome(executable_path=service,options=chrome_options)
         driver.get(f"{url_cho_tot}?page={page}")
@@ -143,56 +143,59 @@ for location,url_cho_tot in locations.items():
         csv_file = open(path+f'/page_{page}.csv','w',encoding='utf8')
         writer = csv.DictWriter(csv_file,columns)
         writer.writeheader()
-        for url in urls:
+        for url in tqdm(urls,position=1,leave=False):
             # subdriver = webdriver.Firefox(executable_path=service,options=options)
 
             subdriver = webdriver.Chrome(executable_path=service,options=chrome_options)
             subdriver.get(url)
-            info = subdriver.find_elements(
-                By.CLASS_NAME, "DetailView_adviewPtyItem__V_sof"
-            )[1]
-            house = {}
-            for c in columns:
-                house[c] = ''
-            house["Location"] = location
-            house["URL"] = url
-            house["Price"] = subdriver.find_elements(
-                By.CLASS_NAME,
-                'AdDecriptionVeh_price__u_N83'
-            )[0].text
-            house["Name"] = subdriver.find_elements(
-                By.CLASS_NAME, "AdDecriptionVeh_adTitle__vEuKD"
-            )[0].text
-            
             try:
-                btn = WebDriverWait(info, 3).until(
-            EC.element_to_be_clickable((By.TAG_NAME, "button"))
+                info = subdriver.find_elements(
+                    By.CLASS_NAME, "DetailView_adviewPtyItem__V_sof"
+                )[1]
+                house = {}
+                for c in columns:
+                    house[c] = ''
+                house["Location"] = location
+                house["URL"] = url
+                house["Price"] = subdriver.find_elements(
+                    By.CLASS_NAME,
+                    'AdDecriptionVeh_price__u_N83'
+                )[0].text
+                house["Name"] = subdriver.find_elements(
+                    By.CLASS_NAME, "AdDecriptionVeh_adTitle__vEuKD"
+                )[0].text
+                
+                try:
+                    btn = WebDriverWait(info, 3).until(
+                EC.element_to_be_clickable((By.TAG_NAME, "button"))
+            )       
+                    btn.click()
+                    # print(element)
+                except:
+                    pass
+                finally:
+                    pass
+
+
+                try:
+                    details = WebDriverWait(info, 3).until(
+            EC.visibility_of_all_elements_located((By.CLASS_NAME, "AdParam_adMediaParam__3epxo"))
         )       
-                btn.click()
-                # print(element)
+                    # details = subdriver.find_elements(
+                    #     By.CLASS_NAME, "AdParam_adMediaParam__3epxo"
+                    # )
+                    if len(details) > 0:
+                        for detail in details:
+                            _, label, data = detail.find_elements(By.TAG_NAME, "span")
+                            setter(house, label.text, data.text)
+                except:
+                    pass
+                finally:
+                    writer.writerow(house)
             except:
-                pass
-            finally:
-                pass
-
-
-            try:
-                details = WebDriverWait(info, 3).until(
-        EC.visibility_of_all_elements_located((By.CLASS_NAME, "AdParam_adMediaParam__3epxo"))
-    )       
-                # details = subdriver.find_elements(
-                #     By.CLASS_NAME, "AdParam_adMediaParam__3epxo"
-                # )
-                if len(details) > 0:
-                    for detail in details:
-                        _, label, data = detail.find_elements(By.TAG_NAME, "span")
-                        setter(house, label.text, data.text)
-            except:
-                pass
-            finally:
-                 writer.writerow(house)
-
-            subdriver.close()
+                print(url)
+            finally:    
+                subdriver.close()
             # print(house)
             # break
         csv_file.close()
