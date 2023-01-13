@@ -1,4 +1,5 @@
 ```code
+mkdir data
 pip install virtualenv
 pip -m venv myenv
 myenv/Scripts/activate
