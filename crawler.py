@@ -14,7 +14,7 @@ from selenium.webdriver.support import expected_conditions as EC
 START = 157
 END = 1000
 # service = r"C:\Users\Admin\Documents\code\crawler\geckodriver-v0.32.0-win32\geckodriver.exe"
-service = r'C:\Users\Admin\Documents\code\crawler\chromedriver_win32\chromedriver.exe'
+service = r'./chromedriver_win32/chromedriver.exe'
 columns = [
     "Diện tích đất:",
     "Số phòng ngủ:",
