@@ -5,7 +5,7 @@ git clone https://github.com/huyanhdo/crawler.git
 cd crawler
 mkdir data
 pip install virtualenv
-pip -m venv myenv
+python -m venv myenv
 myenv/Scripts/activate
 pip install -r requirements.txt
 python crawler.py
